@@ -1,0 +1,24 @@
+# Phase 1 only runs Postgres in Docker. The FastAPI app itself is run
+# directly with uvicorn (see README) rather than containerized, so that
+# `uvicorn --reload` gives instant feedback while you're iterating on
+# Trie/cache code -- a container rebuild loop would slow that down for no
+# benefit at this stage. We'll revisit containerizing the app itself once
+# there are multiple services (cache nodes, batch writer) to orchestrate
+# together, in a later phase.
+services:
+  postgres:
+    image: postgres:16
+    container_name: typeahead-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: typeahead
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - typeahead_pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+
+volumes:
+  typeahead_pgdata:
